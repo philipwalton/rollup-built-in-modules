@@ -18,12 +18,15 @@ const fs = require('fs-extra');
 const nunjucks = require('nunjucks');
 const path = require('path');
 const pkg = require('./package.json');
-const assets = fs.readJsonSync(path.join(pkg.config.publicDir, 'asset-manifest.json'));
 
 
-const generateImportMap = (assetManifest) => {
+nunjucks.configure({
+  noCache: process.env.NODE_ENV !== 'production',
+});
+
+const generateImportMap = (manifest) => {
   const importmap = {imports: {}};
-  for (const [name, filepath] of Object.entries(assets)) {
+  for (const [name, filepath] of Object.entries(manifest)) {
     if (name.startsWith('std:')) {
       importmap.imports[filepath] = [name, filepath];
     }
@@ -31,17 +34,19 @@ const generateImportMap = (assetManifest) => {
   return JSON.stringify(importmap, null, 2);
 };
 
-const templateData = {
-  modules: assets,
-  importmap: generateImportMap(assets),
-};
 
 const app = express();
 
 app.use(express.static(pkg.config.publicDir));
 
 app.get('/', function(request, response) {
-  response.send(nunjucks.render('views/index.njk', templateData));
+  const manifest = fs.readJsonSync(
+      path.join(pkg.config.publicDir, 'entry-manifest.json'));
+
+  const importMap = generateImportMap(manifest);
+
+  const templateData = {manifest, importMap};
+  response.send(nunjucks.render('views/index.njk.html', templateData));
 });
 
 const listener = app.listen(process.env.PORT, function() {

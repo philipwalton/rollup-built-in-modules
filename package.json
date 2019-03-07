@@ -5,7 +5,7 @@
   "description": "A demo of using rollup with built-in modules",
   "main": "index.js",
   "scripts": {
-    "prestart": "rollup -c",
+    "prestart": "rm -r public && rollup -c",
     "start": "node server.js"
   },
   "config": {
@@ -21,11 +21,11 @@
     "@babel/core": "^7.3.4",
     "@babel/polyfill": "^7.2.5",
     "@babel/preset-env": "^7.3.4",
-    "babel-plugin-transform-async-to-promises": "^0.8.5",
     "express": "^4.16.4",
     "fs-extra": "^7.0.1",
-    "nunjucks": "^3.1.7",
-    "rollup": "^1.4.0",
+    "kv-storage-polyfill": "^1.0.0",
+    "nunjucks": "^3.2.0",
+    "rollup": "^1.6.0",
     "rollup-plugin-babel": "^4.3.2",
     "rollup-plugin-commonjs": "^9.2.1",
     "rollup-plugin-node-resolve": "^4.0.1",

@@ -13,57 +13,68 @@
  limitations under the License.
 */
 
-const asyncToPromises = require('babel-plugin-transform-async-to-promises');
-const fs = require('fs-extra');
-const path = require('path');
-const {rollup} = require('rollup');
-const babel = require('rollup-plugin-babel');
-const commonjs = require('rollup-plugin-commonjs');
-const nodeResolve = require('rollup-plugin-node-resolve');
-const pkg = require('./package.json');
-const {terser} = require('rollup-plugin-terser');
+import fs from 'fs-extra';
+import path from 'path';
+import babel from 'rollup-plugin-babel';
+import commonjs from 'rollup-plugin-commonjs';
+import nodeResolve from 'rollup-plugin-node-resolve';
+import {terser} from 'rollup-plugin-terser';
+import pkg from './package.json';
 
 
-const ASSET_MANIFEST_FILENAME = 'asset-manifest.json';
 const BUILT_IN_MODULE_MAP = {
-  'std:kv-storage': 'src/kv-storage/index.js',
+  // This list will grow as more built-in modules are introduced:
+  'std:kv-storage': 'kv-storage-polyfill',
 };
 
-const builtInModulePlugin = (moduleMap, {codeSplit = true} = {}) => {
+const builtInModules = (moduleMap, {
+  manifestFile = 'entry-manifest.json',
+  codeSplit = true,
+} = {}) => {
   return {
+    name: 'built-in-modules',
+    // Uses the `options` hook to make sure each polyfill source file is added
+    // as a distinct entry point. This is to ensure they'll be outputted as
+    // separate files rather than included in the main bundle.
+    // https://rollupjs.org/guide/en#code-splitting
     options(opts) {
-      if (codeSplit) {
-        Object.assign(opts.input, moduleMap);
+      if (codeSplit === true) {
+        for (const [id, entry] of Object.entries(moduleMap)) {
+          // Replace the colon since many systems don't allow them.
+          const safeId = id.replace(/^std:/g, 'std-');
+          opts.input[safeId] = entry;
+        }
       }
     },
-    resolveId(importee) {
+    // Uses the `resolveId` hook to map import statements matching `std:*`
+    // with to their polyfill source files.
+    resolveId(importee, importer) {
       if (importee.startsWith('std:')) {
-        return path.resolve(moduleMap[importee]);
+        return this.resolveId(moduleMap[importee]);
       }
     },
-  };
-};
-
-const assetManifestPlugin = (manifestBasename) => {
-  return {
+    // Uses the `generateBundle` hook to create a mapping of input names to
+    // output URL file paths. This will be used to create our import map.
     generateBundle(options, bundle) {
-      const manifestFile = path.join(options.dir, manifestBasename);
-      const assetManifest = fs.existsSync(manifestFile) ?
-          fs.readJsonSync(manifestFile) : {};
+      const manifestPath = path.join(options.dir, manifestFile);
+      const entryManifest = fs.existsSync(manifestPath) ?
+          fs.readJsonSync(manifestPath) : {};
 
-      for (const [filename, assetInfo] of Object.entries(bundle)) {
-        assetManifest[assetInfo.name] = `/${filename}`;
+      for (const [name, assetInfo] of Object.entries(bundle)) {
+        // Restore the colon that was replaced above
+        const originalName = assetInfo.name.replace(/^std-/, 'std:');
+        entryManifest[originalName] = `/${name}`;
       }
-      fs.outputJsonSync(manifestFile, assetManifest);
+      fs.outputJsonSync(manifestPath, entryManifest);
     },
   };
 };
 
-module.exports = [
+export default [
   // Module config for <script type="module">
   {
     input: {
-      'main': 'src/main.mjs',
+      'main': 'src/main.js',
     },
     output: {
       dir: pkg.config.publicDir,
@@ -71,15 +82,15 @@ module.exports = [
       entryFileNames: '[name]-[hash].mjs',
     },
     plugins: [
-      builtInModulePlugin(BUILT_IN_MODULE_MAP),
-      assetManifestPlugin(ASSET_MANIFEST_FILENAME),
-      terser({module: true}),
+      builtInModules(BUILT_IN_MODULE_MAP),
+      nodeResolve(),
+      // terser({module: true}),
     ],
   },
   // Legacy config for <script nomodule>
   {
     input: {
-      'nomodule': 'src/main.mjs',
+      'nomodule': 'src/main.js',
     },
     output: {
       dir: pkg.config.publicDir,
@@ -88,12 +99,11 @@ module.exports = [
     },
     plugins: [
       // Don't code split in the legacy build since it's not supported in
-      // Rollup, and we're using the built-in module polyfills.
-      builtInModulePlugin(BUILT_IN_MODULE_MAP, {codeSplit: false}),
-      assetManifestPlugin(ASSET_MANIFEST_FILENAME),
+      // Rollup -- and we need to bundle the polyfills anyway.
+      builtInModules(BUILT_IN_MODULE_MAP, {codeSplit: false}),
+      nodeResolve(),
 
       // Add babel, which also requires commonjs support to include polyfills.
-      nodeResolve(),
       commonjs(),
       babel({
         exclude: [
@@ -105,20 +115,9 @@ module.exports = [
           useBuiltIns: 'usage',
           debug: true,
           loose: true,
-          // Exclude regenerator since we're using async-to-promises.
-          exclude: ['@babel/plugin-transform-regenerator']
         }]],
-        plugins: [asyncToPromises],
       }),
-      // terser(),
+      terser(),
     ],
-    onwarn: (warning, warn) => {
-      // Silence circular dependency warning for core-js.
-      if (warning.code === 'CIRCULAR_DEPENDENCY' &&
-          warning.importer.includes('node_modules/core-js')) {
-        return;
-      }
-      warn(warning);
-    }
   },
 ]

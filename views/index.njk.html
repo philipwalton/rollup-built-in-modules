@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<!--
+ Copyright 2019 Google Inc. All Rights Reserved.
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Built-in modules and import maps demo!</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <!-- Add an origin trial so it works for all users in Chrome 74-76 -->
+  <meta http-equiv="origin-trial" content="AqXP72J4XY/OPzoBBbZ1B0vyXYrt9VpTey9zB3DZRHnXM9tISVTXUIsxzQh6qAKzl++vkceeoSQEFNQNPLmUaAkAAABxeyJvcmlnaW4iOiJodHRwczovL3JvbGx1cC1idWlsdC1pbi1tb2R1bGVzLmdsaXRjaC5tZTo0NDMiLCJmZWF0dXJlIjoiQnVpbHRJbk1vZHVsZUt2U3RvcmFnZSIsImV4cGlyeSI6MTU1NTk2NDUyNH0=">
+  
+  <style>
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    background: #FFF;
+    color: #000;
+    font: 1em/1.4 sans-serif;
+    margin: 1.5em;
+  }
+  main {
+    display: block; /* for IE */
+    margin: 0 auto;
+    max-width: 40em;
+  }
+  a {
+    color: hsl(210,90%,45%);
+  }
+  aside {
+    background-color: hsla(60,100%,50%, .1);
+    border: 1px solid hsla(45,75%,50%, 0.2);
+    border-radius: 4px;
+    display: block; /* for IE */
+    padding: .8em 1em;
+  }
+  button {
+    background-color: hsl(210,90%,55%);
+    color: #fff;
+    cursor: pointer;
+    border: 0;
+    border-radius: 4px;
+    font: inherit;
+    padding: .5em 1em;
+    transition: background-color .2s ease-in-out;
+  }
+  button:hover, button:active, button:focus {
+    background: hsl(210,90%,45%);
+  }
+
+  label {
+    align-items: center;
+    cursor: pointer;
+    display: inline-flex;
+    margin: 0 0 .25em;
+  }
+  input[type="checkbox"] {
+    margin-right: 0.75em;
+  }
+  time {
+    border-radius: 4px;
+    display: inline-block;
+    font-style: italic;
+    padding: .15em .3em;
+  }
+  hr {
+    border: 1px solid #ddd;
+    border-width: 1px 0 0;
+    margin: 1.333em 0;
+  }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Built-in Modules Demo</h1>
+
+    <p>This demo shows how to use the <a href="https://developers.google.com/web/updates/2019/03/kv-storage" rel="nofollow">built-in KV Storage module</a> in your application code, and bundle it with <a href="https://rollupjs.org" rel="nofollow">Rollup</a> so it's served as a <a href="https://en.wikipedia.org/wiki/Progressive_enhancement" rel="nofollow">progressive enhancement</a> and works in all browsers (including Internet Explorer). Browsers that don't support KV Storage natively will use the <a href="https://github.com/GoogleChromeLabs/kv-storage-polyfill">KV Storage polyfill</a>.</p>
+
+    <aside>You are using the: <strong id="polyfill-status"></strong></aside>
+
+    <p>To see how the demo was built, <strong>check out the <a href="https://glitch.com/edit/#!/rollup-built-in-modules ">source code on Glitch</a></strong> 🚀</p>
+
+    <hr>
+
+    <p>To use the demo, select any of the preference options below and click the "save changes" button. If you refresh, you'll see your changes persist across page loads. If you do not save your changes, refreshing will restore them to the last saved state.</p>
+
+    <form id="preferences-form">
+      <h3>User preferences</h3>
+      <p>
+        <label><input name="apples" type="checkbox">Apples</label><br>
+        <label><input name="bananas" type="checkbox">Bananas</label><br>
+        <label><input name="cherries" type="checkbox">Cherries</label><br>
+        <label><input name="durian" type="checkbox">Durian</label><br>
+        <label><input name="elderberries" type="checkbox">Elderberries</label><br>
+        <label><input name="figs" type="checkbox">Figs</label><br>
+        <label><input name="guavas" type="checkbox">Guavas</label><br>
+      </p>
+      <p>
+        <button>Save changes</button>
+      </p>
+      <small>
+        <strong>Last saved:</strong>
+        <time id="last-saved-timestamp"></time>
+      </small>
+    </form>
+
+    <hr>
+    <p>Created by <a href="https://twitter.com/philwalton">@philwalton</a>. Built with <a href="https://glitch.com/">Glitch</a>.</p>
+  </main>
+
+  <script type="importmap">{{ importMap | safe }}</script>
+  <script type="module" src="{{ manifest.main }}"></script>
+  <script nomodule src="{{ manifest.nomodule }}"></script>
+</body>
+</html>
