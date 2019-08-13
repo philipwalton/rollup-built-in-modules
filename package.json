@@ -5,8 +5,11 @@
   "description": "A demo of using rollup with built-in modules",
   "main": "index.js",
   "scripts": {
-    "prestart": "rm -r public && rollup -c",
-    "start": "node server.js"
+    "build": "rollup -c",
+    "glitch": "git pull -s recursive -X theirs origin master && refresh",
+    "prestart": "if [ ! -d \"./public\" ]; then npm run build; fi",
+    "start": "node server.js",
+    "watch": "rollup -cw"
   },
   "config": {
     "publicDir": "public"
@@ -18,17 +21,18 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@babel/core": "^7.3.4",
-    "@babel/polyfill": "^7.2.5",
-    "@babel/preset-env": "^7.3.4",
-    "express": "^4.16.4",
-    "fs-extra": "^7.0.1",
-    "kv-storage-polyfill": "^1.0.0",
+    "@babel/core": "^7.5.5",
+    "@babel/preset-env": "^7.5.5",
+    "core-js": "^3.2.1",
+    "express": "^4.17.1",
+    "fs-extra": "^8.1.0",
+    "kv-storage-polyfill": "^2.0.0",
     "nunjucks": "^3.2.0",
-    "rollup": "^1.6.0",
-    "rollup-plugin-babel": "^4.3.2",
-    "rollup-plugin-commonjs": "^9.2.1",
-    "rollup-plugin-node-resolve": "^4.0.1",
-    "rollup-plugin-terser": "^4.0.4"
+    "regenerator-runtime": "^0.13.3",
+    "rollup": "^1.19.4",
+    "rollup-plugin-babel": "^4.3.3",
+    "rollup-plugin-commonjs": "^10.0.2",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-terser": "^5.1.1"
   }
 }

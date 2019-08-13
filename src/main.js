@@ -13,7 +13,7 @@
  limitations under the License.
 */
 
-import {storage} from 'std:kv-storage';
+import storage from 'std:kv-storage';
 
 
 let preferences = {};
